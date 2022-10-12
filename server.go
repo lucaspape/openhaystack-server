@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -57,6 +58,7 @@ func registerHandlers(r *gin.Engine) {
 
 	r.GET(config.ApiPrefix+"/accessories", func(c *gin.Context) {
 		k := c.Query("key")
+		full := c.Query("full")
 
 		if k != config.ApiKey {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "wrong api key"})
@@ -73,6 +75,16 @@ func registerHandlers(r *gin.Engine) {
 		var r []map[string]interface{}
 
 		for _, file := range files {
+			if full == "true" {
+				if !strings.HasPrefix(file.Name(), "full-") {
+					continue
+				}
+			} else {
+				if strings.HasPrefix(file.Name(), "full-") {
+					continue
+				}
+			}
+
 			f, err := os.Open(config.HaystackDir + file.Name())
 
 			if err != nil {
